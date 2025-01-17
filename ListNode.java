@@ -1,19 +1,19 @@
 class ListNode {
-    int value;
+    int data;
     ListNode next;
 
-    ListNode(int value) {
-        this.value = value;
+    ListNode(int data) {
+        this.data = data;
         this.next = null;
     }
 }
 
- class LinkedList {
-    private ListNode head;
+class MyLinkedList {
+    ListNode head;
 
-    // Add a new node at the end
-    public void add(int value) {
-        ListNode newNode = new ListNode(value);
+    // Method to add a new node at the end of the list
+    public void add(int data) {
+        ListNode newNode = new ListNode(data);
         if (head == null) {
             head = newNode;
         } else {
@@ -25,29 +25,70 @@ class ListNode {
         }
     }
 
-    // Count occurrences of a given integer
-    public int countOccurrences(int target) {
-        int count = 0;
-        for (ListNode current = head; current != null; current = current.next) {
-            if (current.value == target)
-                 count++;
+    // Method to print the linked list
+    public void printList() {
+        ListNode current = head;
+        while (current != null) {
+            System.out.print(current.data + " ");
+            current = current.next;
         }
-        return count;
+        System.out.println();
     }
 
+    // Method to check if sublist is present in the main list
+    public boolean isSublist(MyLinkedList sublist) {
+        if (sublist.head == null) return true; // Empty sublist is always found
+        if (this.head == null) return false;   // Non-empty sublist cannot be found in an empty list
+
+        ListNode mainCurrent = this.head;
+
+        while (mainCurrent != null) {
+            if (isMatch(mainCurrent, sublist.head)) {
+                return true; // Sublist found
+            }
+            mainCurrent = mainCurrent.next; // Move to the next node in main list
+        }
+
+        return false; // Sublist not found
+    }
+
+    // Helper method to check if two lists match starting from two nodes
+    private boolean isMatch(ListNode mainNode, ListNode subNode) {
+        while (mainNode != null && subNode != null && mainNode.data == subNode.data) {
+            mainNode = mainNode.next;
+            subNode = subNode.next;
+        }
+        return subNode == null; // If we reached the end of the sublist, they match
+    }
+    class Driver {
     public static void main(String[] args) {
-        LinkedList linkedList = new LinkedList();
+        // Creating the main linked list
+        MyLinkedList mainList = new MyLinkedList();
+        mainList.add(10);
+        mainList.add(15);
+        mainList.add(23);
+        mainList.add(30);
+        mainList.add(41);
 
-        // Adding elements
-        linkedList.add(1);
-        linkedList.add(2);
-        linkedList.add(3);
-        linkedList.add(2);
-        linkedList.add(4);
-        linkedList.add(2);
+        System.out.println("Main Linked List:");
+        mainList.printList();
 
-        int targetValue = 2;
-        System.out.println("The number " + targetValue + " occurs " + linkedList.countOccurrences(targetValue) + " times.");
-        // Output: The number 2 occurs 3 times.
+        // Creating the sublinked list
+        MyLinkedList subList = new MyLinkedList();
+        subList.add(23);
+        subList.add(30);
+
+        System.out.println("Sub Linked List:");
+        subList.printList();
+
+        // Checking if the sublist exists in the main list
+        boolean exists = mainList.isSublist(subList);
+
+        if (exists) {
+            System.out.println("Sublist found in the main list.");
+        } else {
+            System.out.println("Sublist not found in the main list.");
+        }
     }
+}
 }
