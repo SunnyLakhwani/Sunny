@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>GradeIQ — Student Performance Predictor</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ─── RESET & BASE ─────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:         #0A0A0F;
+      --surface:    #13131A;
+      --surface2:   #1C1C26;
+      --border:     rgba(255,255,255,0.07);
+      --border-m:   rgba(255,255,255,0.13);
+      --text:       #F0EFF8;
+      --text-2:     #8C8BA0;
+      --text-3:     #4A4960;
+      --accent:     #7B6EF6;
+      --accent-2:   #B09AF8;
+      --green:      #3ECFA0;
+      --amber:      #F5A623;
+      --red:        #F56342;
+      --radius:     16px;
+      --radius-sm:  10px;
+    }
+
+    html, body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: 14px;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ─── LAYOUT ─────────────────────────────────────── */
+    .app { max-width: 480px; margin: 0 auto; padding: 0 0 80px; }
+
+    /* ─── HEADER ─────────────────────────────────────── */
+    .header {
+      padding: 52px 24px 28px;
+      position: relative;
+      overflow: hidden;
+    }
+    .header::before {
+      content: '';
+      position: absolute;
+      top: -60px; right: -40px;
+      width: 200px; height: 200px;
+      background: radial-gradient(circle, rgba(123,110,246,0.18) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .header-eyebrow {
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      color: var(--accent);
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+    .header h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: 32px;
+      font-weight: 800;
+      line-height: 1.1;
+      color: var(--text);
+    }
+    .header h1 span { color: var(--accent-2); }
+    .header p {
+      margin-top: 10px;
+      font-size: 13px;
+      color: var(--text-2);
+      line-height: 1.7;
+    }
+
+    /* ─── SECTION ─────────────────────────────────────── */
+    .section { padding: 0 24px; margin-bottom: 28px; }
+    .section-label {
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--text-3);
+      margin-bottom: 14px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ─── CARD ─────────────────────────────────────────── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      margin-bottom: 12px;
+    }
+    .card-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .card-row:last-child { margin-bottom: 0; }
+    .field-label {
+      font-size: 12px;
+      color: var(--text-2);
+      line-height: 1.4;
+    }
+    .field-hint { font-size: 10px; color: var(--text-3); margin-top: 1px; }
+
+    /* ─── SLIDER ───────────────────────────────────────── */
+    .slider-wrap { display: flex; align-items: center; gap: 10px; flex: 1; margin-left: 16px; }
+    input[type=range] {
+      -webkit-appearance: none;
+      flex: 1;
+      height: 3px;
+      background: var(--surface2);
+      border-radius: 2px;
+      outline: none;
+      cursor: pointer;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 0 4px rgba(123,110,246,0.2);
+      cursor: pointer;
+      transition: box-shadow 0.15s;
+    }
+    input[type=range]:active::-webkit-slider-thumb {
+      box-shadow: 0 0 0 8px rgba(123,110,246,0.15);
+    }
+    .slider-val {
+      font-family: 'Syne', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--accent-2);
+      min-width: 36px;
+      text-align: right;
+    }
+
+    /* ─── SELECT ───────────────────────────────────────── */
+    .styled-select {
+      background: var(--surface2);
+      border: 1px solid var(--border-m);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: 13px;
+      padding: 8px 12px;
+      outline: none;
+      cursor: pointer;
+      min-width: 110px;
+    }
+    .styled-select option { background: #1C1C26; }
+
+    /* ─── CHIPS ────────────────────────────────────────── */
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .chip {
+      padding: 6px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--border-m);
+      background: var(--surface2);
+      color: var(--text-2);
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.18s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .chip.on {
+      background: rgba(123,110,246,0.18);
+      border-color: var(--accent);
+      color: var(--accent-2);
+    }
+
+    /* ─── PREDICT BUTTON ───────────────────────────────── */
+    .predict-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: calc(100% - 48px);
+      margin: 4px 24px 0;
+      padding: 16px;
+      background: var(--accent);
+      color: #fff;
+      font-family: 'Syne', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.12s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .predict-btn:active { transform: scale(0.97); opacity: 0.9; }
+    .predict-btn svg { width: 18px; height: 18px; }
+
+    /* ─── RESULT PANEL ─────────────────────────────────── */
+    .result-panel {
+      margin: 24px 24px 0;
+      border-radius: var(--radius);
+      overflow: hidden;
+      display: none;
+      animation: fadeUp 0.4s ease;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .result-panel.visible { display: block; }
+
+    .grade-hero {
+      padding: 28px 24px 22px;
+      text-align: center;
+      position: relative;
+    }
+    .grade-badge {
+      font-family: 'Syne', sans-serif;
+      font-size: 72px;
+      font-weight: 800;
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+    .grade-score {
+      font-size: 13px;
+      color: var(--text-2);
+      margin-bottom: 4px;
+    }
+    .grade-score strong { color: var(--text); font-size: 22px; font-family: 'Syne', sans-serif; }
+    .grade-label {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 5px 18px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+    }
+
+    /* ─── SCORE BAR ────────────────────────────────────── */
+    .score-track {
+      height: 6px;
+      background: var(--surface2);
+      border-radius: 3px;
+      overflow: hidden;
+      margin: 16px 0 8px;
+    }
+    .score-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.8s cubic-bezier(.16,1,.3,1);
+    }
+
+    /* ─── FACTOR BREAKDOWN ─────────────────────────────── */
+    .breakdown { padding: 0 24px 8px; }
+    .factor-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .factor-name { font-size: 12px; color: var(--text-2); width: 130px; flex-shrink: 0; }
+    .factor-track {
+      flex: 1; height: 4px;
+      background: var(--surface2);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .factor-fill {
+      height: 100%;
+      border-radius: 2px;
+      transition: width 0.7s cubic-bezier(.16,1,.3,1);
+    }
+    .factor-pct { font-size: 11px; color: var(--text-3); min-width: 30px; text-align: right; }
+
+    /* ─── INSIGHTS ─────────────────────────────────────── */
+    .insights { padding: 0 24px; }
+    .insight {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      padding: 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      margin-bottom: 10px;
+    }
+    .insight-icon {
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+    .insight-text { font-size: 12px; color: var(--text-2); line-height: 1.6; }
+    .insight-text strong { color: var(--text); display: block; font-size: 13px; margin-bottom: 2px; }
+
+    /* ─── DISCLAIMER ───────────────────────────────────── */
+    .disclaimer {
+      margin: 20px 24px 0;
+      font-size: 10px;
+      color: var(--text-3);
+      line-height: 1.7;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-eyebrow">AI Prediction System</div>
+    <h1>Grade<span>IQ</span></h1>
+    <p>Enter your student profile below. The system analyzes your inputs and predicts your expected academic performance.</p>
+  </div>
+
+  <!-- SECTION 1: ACADEMICS -->
+  <div class="section">
+    <div class="section-label">Academic inputs</div>
+    <div class="card">
+
+      <div class="card-row">
+        <div>
+          <div class="field-label">Study hours / day</div>
+          <div class="field-hint">Average time spent studying</div>
+        </div>
+        <div class="slider-wrap">
+          <input type="range" id="study" min="0" max="12" value="4" step="0.5"
+            oninput="document.getElementById('study-v').textContent=parseFloat(this.value).toFixed(1)+'h'">
+          <span class="slider-val" id="study-v">4.0h</span>
+        </div>
+      </div>
+
+      <div class="card-row">
+        <div>
+          <div class="field-label">Class attendance</div>
+          <div class="field-hint">Percentage of classes attended</div>
+        </div>
+        <div class="slider-wrap">
+          <input type="range" id="attend" min="0" max="100" value="80" step="1"
+            oninput="document.getElementById('attend-v').textContent=this.value+'%'">
+          <span class="slider-val" id="attend-v">80%</span>
+        </div>
+      </div>
+
+      <div class="card-row">
+        <div>
+          <div class="field-label">Previous GPA</div>
+          <div class="field-hint">Last semester GPA (0–4.0)</div>
+        </div>
+        <div class="slider-wrap">
+          <input type="range" id="gpa" min="0" max="4" value="2.8" step="0.1"
+            oninput="document.getElementById('gpa-v').textContent=parseFloat(this.value).toFixed(1)">
+          <span class="slider-val" id="gpa-v">2.8</span>
+        </div>
+      </div>
+
+      <div class="card-row">
+        <div>
+          <div class="field-label">Assignments done</div>
+          <div class="field-hint">Completion rate</div>
+        </div>
+        <div class="slider-wrap">
+          <input type="range" id="assign" min="0" max="100" value="75" step="1"
+            oninput="document.getElementById('assign-v').textContent=this.value+'%'">
+          <span class="slider-val" id="assign-v">75%</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- SECTION 2: ENVIRONMENT -->
+  <div class="section">
+    <div class="section-label">Environment</div>
+    <div class="card">
+
+      <div class="card-row">
+        <div>
+          <div class="field-label">Sleep hours / night</div>
+          <div class="field-hint">Average nightly sleep</div>
+        </div>
+        <div class="slider-wrap">
+          <input type="range" id="sleep" min="3" max="12" value="7" step="0.5"
+            oninput="document.getElementById('sleep-v').textContent=parseFloat(this.value).toFixed(1)+'h'">
+          <span class="slider-val" id="sleep-v">7.0h</span>
+        </div>
+      </div>
+
+      <div class="card-row">
+        <div>
+          <div class="field-label">Parental support</div>
+          <div class="field-hint">Level of home support</div>
+        </div>
+        <select class="styled-select" id="parent">
+          <option value="3">High</option>
+          <option value="2" selected>Medium</option>
+          <option value="1">Low</option>
+          <option value="0">None</option>
+        </select>
+      </div>
+
+      <div class="card-row">
+        <div>
+          <div class="field-label">Tutoring</div>
+          <div class="field-hint">Extra academic support</div>
+        </div>
+        <select class="styled-select" id="tutor">
+          <option value="2">Regular</option>
+          <option value="1">Occasional</option>
+          <option value="0" selected>None</option>
+        </select>
+      </div>
+
+      <div class="card-row">
+        <div>
+          <div class="field-label">Internet access</div>
+          <div class="field-hint">Quality of access at home</div>
+        </div>
+        <select class="styled-select" id="internet">
+          <option value="2" selected>Reliable</option>
+          <option value="1">Sometimes</option>
+          <option value="0">No access</option>
+        </select>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- SECTION 3: HABITS & WELLNESS -->
+  <div class="section">
+    <div class="section-label">Habits &amp; wellness</div>
+    <div class="chips" id="habits">
+      <button class="chip" data-key="exercise" onclick="toggleChip(this)">Regular exercise</button>
+      <button class="chip" data-key="meditate" onclick="toggleChip(this)">Meditation / mindfulness</button>
+      <button class="chip on" data-key="notes" onclick="toggleChip(this)">Takes good notes</button>
+      <button class="chip" data-key="group" onclick="toggleChip(this)">Study groups</button>
+      <button class="chip" data-key="distract" onclick="toggleChip(this)">Easily distracted</button>
+      <button class="chip" data-key="parttime" onclick="toggleChip(this)">Part-time job</button>
+      <button class="chip" data-key="extracurr" onclick="toggleChip(this)">Extracurriculars</button>
+      <button class="chip" data-key="anxiety" onclick="toggleChip(this)">Test anxiety</button>
+    </div>
+  </div>
+
+  <!-- PREDICT BUTTON -->
+  <button class="predict-btn" onclick="runPrediction()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+    </svg>
+    Predict my grade
+  </button>
+
+  <!-- RESULT PANEL -->
+  <div class="result-panel" id="result-panel">
+
+    <!-- Grade Hero -->
+    <div class="grade-hero" id="grade-hero">
+      <div class="grade-badge" id="grade-badge">—</div>
+      <div class="grade-score">Predicted score: <strong id="score-num">—</strong><span style="font-size:14px;color:var(--text-2)">/100</span></div>
+      <div class="score-track">
+        <div class="score-fill" id="score-fill" style="width:0%"></div>
+      </div>
+      <div id="grade-label-pill" class="grade-label">—</div>
+    </div>
+
+    <div class="section-label" style="padding:0 24px;margin-bottom:10px;">Factor breakdown</div>
+    <div class="breakdown" id="breakdown"></div>
+
+    <div class="section-label" style="padding:0 24px;margin:14px 0 10px;">Insights &amp; tips</div>
+    <div class="insights" id="insights"></div>
+
+    <p class="disclaimer">This prediction is generated by a weighted algorithmic model for educational purposes. Results are estimates only — actual grades depend on many additional factors.</p>
+  </div>
+
+</div>
+
+<script>
+  // ─── STATE ──────────────────────────────────────────────
+  const habits = {};
+
+  function toggleChip(btn) {
+    const key = btn.dataset.key;
+    habits[key] = !habits[key];
+    btn.classList.toggle('on', habits[key]);
+  }
+
+  // Initialize chip that starts .on
+  document.querySelectorAll('.chip.on').forEach(btn => {
+    habits[btn.dataset.key] = true;
+  });
+
+  // ─── PREDICTION ENGINE ───────────────────────────────────
+  /*
+   * Each factor scores between 0 and its max weight.
+   * Weights are calibrated to sum to 100 at maximum.
+   */
+  function computeScore() {
+    const study   = parseFloat(document.getElementById('study').value);   // 0–12
+    const attend  = parseFloat(document.getElementById('attend').value);  // 0–100
+    const gpa     = parseFloat(document.getElementById('gpa').value);     // 0–4
+    const assign  = parseFloat(document.getElementById('assign').value);  // 0–100
+    const sleep   = parseFloat(document.getElementById('sleep').value);   // 3–12
+    const parent  = parseInt(document.getElementById('parent').value);    // 0–3
+    const tutor   = parseInt(document.getElementById('tutor').value);     // 0–2
+    const internet= parseInt(document.getElementById('internet').value);  // 0–2
+
+    const factors = [];
+
+    // 1. Study hours (max 22 pts) — optimal 6h, diminishing returns above 10
+    const studyNorm = Math.min(study / 6, 1) * 22;
+    factors.push({ name: 'Study hours', score: studyNorm, max: 22 });
+
+    // 2. Attendance (max 20 pts)
+    const attendScore = (attend / 100) * 20;
+    factors.push({ name: 'Attendance', score: attendScore, max: 20 });
+
+    // 3. Previous GPA (max 18 pts)
+    const gpaScore = (gpa / 4) * 18;
+    factors.push({ name: 'Previous GPA', score: gpaScore, max: 18 });
+
+    // 4. Assignment completion (max 15 pts)
+    const assignScore = (assign / 100) * 15;
+    factors.push({ name: 'Assignments', score: assignScore, max: 15 });
+
+    // 5. Sleep quality (max 8 pts) — optimal 7–9h
+    const sleepOptimal = sleep >= 7 && sleep <= 9 ? 1 : sleep < 7 ? sleep / 7 : (12 - sleep) / 3;
+    const sleepScore = Math.max(0, sleepOptimal) * 8;
+    factors.push({ name: 'Sleep quality', score: sleepScore, max: 8 });
+
+    // 6. Parental support (max 5 pts)
+    const parentScore = (parent / 3) * 5;
+    factors.push({ name: 'Parental support', score: parentScore, max: 5 });
+
+    // 7. Tutoring (max 5 pts)
+    const tutorScore = (tutor / 2) * 5;
+    factors.push({ name: 'Tutoring', score: tutorScore, max: 5 });
+
+    // 8. Internet access (max 3 pts)
+    const netScore = (internet / 2) * 3;
+    factors.push({ name: 'Internet access', score: netScore, max: 3 });
+
+    // Habit adjustments (bonus/penalty, capped so total stays ≤100)
+    let habitDelta = 0;
+    if (habits.exercise)   habitDelta += 2.5;
+    if (habits.meditate)   habitDelta += 1.5;
+    if (habits.notes)      habitDelta += 2.0;
+    if (habits.group)      habitDelta += 2.0;
+    if (habits.distract)   habitDelta -= 4.0;
+    if (habits.parttime)   habitDelta -= 2.5;
+    if (habits.extracurr)  habitDelta += 1.0;
+    if (habits.anxiety)    habitDelta -= 3.0;
+
+    const base = factors.reduce((s, f) => s + f.score, 0); // max 96 from factors
+    const raw  = Math.min(100, Math.max(0, base + habitDelta));
+    const score = Math.round(raw);
+
+    return { score, factors };
+  }
+
+  function gradeFromScore(s) {
+    if (s >= 90) return { letter: 'A+', label: 'Outstanding',  bg: 'rgba(62,207,160,0.15)', color: '#3ECFA0', barColor: '#3ECFA0' };
+    if (s >= 80) return { letter: 'A',  label: 'Excellent',    bg: 'rgba(62,207,160,0.1)',  color: '#3ECFA0', barColor: '#3ECFA0' };
+    if (s >= 70) return { letter: 'B',  label: 'Good',         bg: 'rgba(123,110,246,0.15)',color: '#9D8FF8', barColor: '#7B6EF6' };
+    if (s >= 60) return { letter: 'C',  label: 'Average',      bg: 'rgba(245,166,35,0.15)', color: '#F5A623', barColor: '#F5A623' };
+    if (s >= 50) return { letter: 'D',  label: 'Below average',bg: 'rgba(245,166,35,0.1)',  color: '#E89010', barColor: '#E89010' };
+    return             { letter: 'F',  label: 'At risk',       bg: 'rgba(245,99,66,0.15)',  color: '#F56342', barColor: '#F56342' };
+  }
+
+  function buildInsights(score, factors) {
+    const tips = [];
+
+    const weak = [...factors].sort((a,b) => (a.score/a.max)-(b.score/b.max))[0];
+
+    if (weak.name === 'Study hours' && weak.score/weak.max < 0.6)
+      tips.push({ icon: '📚', title: 'Increase study time', text: 'You\'re studying less than 3.5h/day. Even 1 extra hour daily can meaningfully raise your grade.' });
+    if (weak.name === 'Attendance' && weak.score/weak.max < 0.7)
+      tips.push({ icon: '🎓', title: 'Attend more classes', text: 'Missing classes is one of the strongest predictors of lower grades. Try to reach 85%+ attendance.' });
+    if (weak.name === 'Assignments' && weak.score/weak.max < 0.7)
+      tips.push({ icon: '📝', title: 'Submit all assignments', text: 'Incomplete assignments pull your grade down significantly. Prioritize consistency over perfection.' });
+
+    if (habits.distract)
+      tips.push({ icon: '📵', title: 'Manage distractions', text: 'Use phone-free study sessions (Pomodoro: 25 min on, 5 min break) to improve focus.' });
+    if (habits.anxiety)
+      tips.push({ icon: '🧘', title: 'Manage test anxiety', text: 'Practice timed mock tests to build confidence. Deep breathing before exams is proven to help.' });
+    if (!habits.notes)
+      tips.push({ icon: '✏️', title: 'Improve note-taking', text: 'Good notes reduce revision time. Try the Cornell method — divide page into notes, cues, and summary.' });
+    if (!habits.group)
+      tips.push({ icon: '🤝', title: 'Try study groups', text: 'Teaching peers is one of the most effective learning strategies. Form a group of 3–5 students.' });
+
+    const sleep = parseFloat(document.getElementById('sleep').value);
+    if (sleep < 6.5)
+      tips.push({ icon: '😴', title: 'Sleep more', text: 'Sleep under 6.5h impairs memory consolidation. Aim for 7–9h, especially before exams.' });
+
+    if (score >= 80)
+      tips.push({ icon: '⚡', title: 'Keep it up', text: 'Your profile shows strong academic habits. Stay consistent and don\'t let up close to exams.' });
+
+    return tips.slice(0, 3); // show max 3 insights
+  }
+
+  // ─── RENDER ──────────────────────────────────────────────
+  function runPrediction() {
+    const { score, factors } = computeScore();
+    const grade = gradeFromScore(score);
+
+    // Hero
+    document.getElementById('grade-badge').textContent = grade.letter;
+    document.getElementById('grade-badge').style.color = grade.color;
+    document.getElementById('score-num').textContent   = score;
+    document.getElementById('grade-hero').style.background = grade.bg;
+
+    const pill = document.getElementById('grade-label-pill');
+    pill.textContent = grade.label;
+    pill.style.background = grade.bg;
+    pill.style.color       = grade.color;
+
+    // Score bar (delay for animation)
+    const fill = document.getElementById('score-fill');
+    fill.style.width      = '0%';
+    fill.style.background = grade.barColor;
+    requestAnimationFrame(() => {
+      setTimeout(() => { fill.style.width = score + '%'; }, 60);
+    });
+
+    // Factor breakdown
+    const bd = document.getElementById('breakdown');
+    bd.innerHTML = '';
+    factors.forEach(f => {
+      const pct = Math.round((f.score / f.max) * 100);
+      const barColor = pct > 65 ? '#3ECFA0' : pct > 35 ? '#7B6EF6' : '#F56342';
+      bd.innerHTML += `
+        <div class="factor-row">
+          <div class="factor-name">${f.name}</div>
+          <div class="factor-track">
+            <div class="factor-fill" style="width:0%;background:${barColor}" data-target="${pct}"></div>
+          </div>
+          <div class="factor-pct">${pct}%</div>
+        </div>`;
+    });
+
+    // Animate factor bars
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        document.querySelectorAll('.factor-fill').forEach(el => {
+          el.style.width = el.dataset.target + '%';
+        });
+      }, 80);
+    });
+
+    // Insights
+    const ins = document.getElementById('insights');
+    ins.innerHTML = '';
+    buildInsights(score, factors).forEach(tip => {
+      ins.innerHTML += `
+        <div class="insight">
+          <div class="insight-icon" style="background:var(--surface2)">${tip.icon}</div>
+          <div class="insight-text"><strong>${tip.title}</strong>${tip.text}</div>
+        </div>`;
+    });
+
+    // Show panel
+    const panel = document.getElementById('result-panel');
+    panel.classList.add('visible');
+    setTimeout(() => panel.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+  }
+</script>
+</body>
+</html>
